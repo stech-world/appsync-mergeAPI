@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  appsync-merge-api-example
+
+  Sample SAM Template for appsync-merge-api-example
+  
+
+Parameters:
+  APIName:
+    Type: String
+    Description: The name for the AppSync GraphQL API to be created.
+    Default: Merge API
+
+Resources:
+
+# Write role and policy for AppSync Merge API
+  AppSyncMergeAPIExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: appsync.amazonaws.com
+          Action: sts:AssumeRole
+          Condition:
+            StringEquals:
+              aws:SourceAccount: !Sub ${AWS::AccountId}
+            ArnLike:
+              aws:SourceArn: !Sub arn:aws:appsync:${AWS::Region}:${AWS::AccountId}:apis/*
+      Path: /
+      Policies:
+        - PolicyName: AppSyncMergeAPIPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - appsync:StartSchemaMerge
+              Resource:
+              - !Sub arn:aws:appsync:${AWS::Region}:${AWS::AccountId}:apis/*
+
+
+  AppSyncApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt AppSyncMergeAPI.ApiId
+
+  AppSyncMergeAPI:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub ${APIName}
+      ApiType: MERGED
+      AuthenticationType: API_KEY
+      MergedApiExecutionRoleArn: !GetAtt AppSyncMergeAPIExecutionRole.Arn
+
+

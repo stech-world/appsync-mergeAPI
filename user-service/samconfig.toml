@@ -1,0 +1,27 @@
+# More information about the configuration file can be found here:
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
+version = 0.1
+
+[default]
+stack_name = "appsync-user-api-example"
+cached = true
+parallel = true
+lint = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+watch = true
+warm_containers = "EAGER"
+
+[default.deploy.parameters]
+stack_name = "appsync-user-api-example"
+resolve_s3 = true
+s3_prefix = "appsync-user-api-example"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = """
+APIName=\"User API\" \
+MergedApiIdentifier="l7jlsrhrovgzdmybpnenmixfna" \
+MergeApiExecutionRoleName="appsync-merge-api-example-AppSyncMergeAPIExecutionR-qScPFImnhmEA"
+"""
+image_repositories = []

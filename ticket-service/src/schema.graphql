@@ -1,0 +1,21 @@
+type Ticket {
+  id: ID!
+  date: AWSDateTime
+  band: String
+  place: String
+}
+
+
+
+type Query {
+  getAllTickets: [Ticket]
+  getSingleTicket(id: ID!): Ticket
+}
+
+type Mutation {
+  createSingleTicket(
+    date: AWSDateTime
+    band: String
+    place: String
+  ): Ticket
+}

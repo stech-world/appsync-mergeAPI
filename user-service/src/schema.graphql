@@ -1,0 +1,40 @@
+enum GENDER {
+  MALE
+  FEMALE
+  OTHER
+}
+
+
+type User {
+  id: ID!
+  name: String
+  age: Int
+  gender: GENDER
+}
+
+
+type Ticket {
+  user: User
+}
+
+
+
+type Query {
+  getAllUsers: [User]
+  getSingleUser(id: ID!): User
+}
+
+
+
+type Mutation {
+  createSingleUser(
+    name: String
+    age: Int
+    gender: GENDER
+  ): User
+
+  createSingleTicket(
+    user: ID
+  ): Ticket
+
+}

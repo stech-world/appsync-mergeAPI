@@ -1,0 +1,234 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  appsync-user-api-example
+
+  Sample SAM Template for appsync-user-api-example
+  
+
+Parameters:
+  APIName:
+    Type: String
+    Description: The name for the AppSync GraphQL API to be created.
+    Default: User API  
+  MergedApiIdentifier:
+    Type: String
+    Description: The name for the AppSync GraphQL Merge API for the merge association.
+    Default: ""
+  MergeApiExecutionRoleName:
+    Type: String
+    Description: The ARN of the AppSync Merge API Execution Role.
+    Default: ""
+
+Conditions:
+  IsMergeApiDefined: !Not [!Equals [!Ref MergedApiIdentifier, ""]]
+
+Resources:
+
+  SourceApiAssociation:
+    Condition:
+      IsMergeApiDefined
+    Type: AWS::AppSync::SourceApiAssociation
+    Properties:
+      MergedApiIdentifier: !Ref MergedApiIdentifier
+      SourceApiAssociationConfig:
+        MergeType: AUTO_MERGE
+      SourceApiIdentifier: !GetAtt AppSyncUserAPI.ApiId
+
+  MergeApiExecutionRolePolicyAssociation:
+    Condition:
+      IsMergeApiDefined
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub MergeApiExecutionRolePolicyAssociationFor-${AppSyncUserAPI.ApiId}
+      Roles:
+        - !Ref MergeApiExecutionRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - appsync:SourceGraphQL
+            Resource:
+              - !Sub arn:aws:appsync:${AWS::Region}:${AWS::AccountId}:apis/${AppSyncUserAPI.ApiId}
+              - !Sub arn:aws:appsync:${AWS::Region}:${AWS::AccountId}:apis/${AppSyncUserAPI.ApiId}/*
+
+  AppSyncApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+
+  AppSyncUserAPI:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub ${APIName}
+      AuthenticationType: API_KEY
+
+  AppSyncUserSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    DependsOn:
+      - AppSyncUserAPI
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      DefinitionS3Location: ./src/schema.graphql
+
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+
+  UserTableDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      Name: UserTableDataSource
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt AppSyncDataSourceRole.Arn
+      DynamoDBConfig:
+        TableName: !Ref UserTable
+        AwsRegion: !Ref AWS::Region
+
+
+  AppSyncDataSourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: appsync.amazonaws.com
+      Policies:
+        - PolicyName: DataSourceDynamoPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: 
+                  - !GetAtt UserTable.Arn
+
+
+  GetSingleUserResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/baseResolver.js
+      FieldName: getSingleUser
+      TypeName: Query
+      Kind: PIPELINE
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+      PipelineConfig:
+        Functions:
+          - !GetAtt GetSingleUserFunction.FunctionId
+
+  GetSingleUserFunction:
+    Type: AWS::AppSync::FunctionConfiguration
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/getSingleUser.js
+      DataSourceName: !GetAtt UserTableDataSource.Name
+      Name: GetSingleUserFunction
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+
+
+  GetAllUsersResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/baseResolver.js
+      FieldName: getAllUsers
+      TypeName: Query
+      Kind: PIPELINE
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+      PipelineConfig:
+        Functions:
+          - !GetAtt GetAllUsersFunction.FunctionId
+
+  GetAllUsersFunction:
+    Type: AWS::AppSync::FunctionConfiguration
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/getAllUsers.js
+      DataSourceName: !GetAtt UserTableDataSource.Name
+      Name: GetAllUsersFunction
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+
+
+
+
+  CreateSingleUserResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/baseResolver.js
+      FieldName: createSingleUser
+      TypeName: Mutation
+      Kind: PIPELINE
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+      PipelineConfig:
+        Functions:
+          - !GetAtt CreateSingleUserFunction.FunctionId
+
+  CreateSingleUserFunction:
+    Type: AWS::AppSync::FunctionConfiguration
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/createSingleUser.js
+      DataSourceName: !GetAtt UserTableDataSource.Name
+      Name: CreateSingleUserFunction
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+
+  GetTicketUserResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/baseResolver.js
+      FieldName: user
+      TypeName: Ticket
+      Kind: PIPELINE
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+      PipelineConfig:
+        Functions:
+          - !GetAtt GetTicketUserFunction.FunctionId
+
+  GetTicketUserFunction:
+    Type: AWS::AppSync::FunctionConfiguration
+    Properties:
+      ApiId: !GetAtt AppSyncUserAPI.ApiId
+      CodeS3Location: ./src/resolvers/getSingleUserFromCTXSource.js
+      DataSourceName: !GetAtt UserTableDataSource.Name
+      Name: GetTicketUserFunction
+      Runtime:
+        Name: APPSYNC_JS
+        RuntimeVersion: 1.0.0
+
+
+Outputs:
+  SourceApiAssociationStatus:
+    Condition:
+      IsMergeApiDefined
+    Value: !GetAtt SourceApiAssociation.SourceApiAssociationStatus
