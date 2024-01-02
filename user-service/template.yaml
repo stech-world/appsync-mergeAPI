@@ -28,6 +28,8 @@ Resources:
   SourceApiAssociation:
     Condition:
       IsMergeApiDefined
+    DependsOn: 
+      - AppSyncUserSchema
     Type: AWS::AppSync::SourceApiAssociation
     Properties:
       MergedApiIdentifier: !Ref MergedApiIdentifier
@@ -122,24 +124,10 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/baseResolver.js
+      CodeS3Location: ./src/resolvers/getSingleUser.js
       FieldName: getSingleUser
       TypeName: Query
-      Kind: PIPELINE
-      Runtime:
-        Name: APPSYNC_JS
-        RuntimeVersion: 1.0.0
-      PipelineConfig:
-        Functions:
-          - !GetAtt GetSingleUserFunction.FunctionId
-
-  GetSingleUserFunction:
-    Type: AWS::AppSync::FunctionConfiguration
-    Properties:
-      ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/getSingleUser.js
       DataSourceName: !GetAtt UserTableDataSource.Name
-      Name: GetSingleUserFunction
       Runtime:
         Name: APPSYNC_JS
         RuntimeVersion: 1.0.0
@@ -149,79 +137,36 @@ Resources:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/baseResolver.js
+      CodeS3Location: ./src/resolvers/getAllUsers.js
       FieldName: getAllUsers
       TypeName: Query
-      Kind: PIPELINE
-      Runtime:
-        Name: APPSYNC_JS
-        RuntimeVersion: 1.0.0
-      PipelineConfig:
-        Functions:
-          - !GetAtt GetAllUsersFunction.FunctionId
-
-  GetAllUsersFunction:
-    Type: AWS::AppSync::FunctionConfiguration
-    Properties:
-      ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/getAllUsers.js
       DataSourceName: !GetAtt UserTableDataSource.Name
-      Name: GetAllUsersFunction
       Runtime:
         Name: APPSYNC_JS
         RuntimeVersion: 1.0.0
-
-
 
 
   CreateSingleUserResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/baseResolver.js
+      CodeS3Location: ./src/resolvers/createSingleUser.js
       FieldName: createSingleUser
       TypeName: Mutation
-      Kind: PIPELINE
-      Runtime:
-        Name: APPSYNC_JS
-        RuntimeVersion: 1.0.0
-      PipelineConfig:
-        Functions:
-          - !GetAtt CreateSingleUserFunction.FunctionId
-
-  CreateSingleUserFunction:
-    Type: AWS::AppSync::FunctionConfiguration
-    Properties:
-      ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/createSingleUser.js
       DataSourceName: !GetAtt UserTableDataSource.Name
-      Name: CreateSingleUserFunction
       Runtime:
         Name: APPSYNC_JS
         RuntimeVersion: 1.0.0
+
 
   GetTicketUserResolver:
     Type: AWS::AppSync::Resolver
     Properties:
       ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/baseResolver.js
+      CodeS3Location: ./src/resolvers/getSingleUserFromCTXSource.js
       FieldName: user
       TypeName: Ticket
-      Kind: PIPELINE
-      Runtime:
-        Name: APPSYNC_JS
-        RuntimeVersion: 1.0.0
-      PipelineConfig:
-        Functions:
-          - !GetAtt GetTicketUserFunction.FunctionId
-
-  GetTicketUserFunction:
-    Type: AWS::AppSync::FunctionConfiguration
-    Properties:
-      ApiId: !GetAtt AppSyncUserAPI.ApiId
-      CodeS3Location: ./src/resolvers/getSingleUserFromCTXSource.js
       DataSourceName: !GetAtt UserTableDataSource.Name
-      Name: GetTicketUserFunction
       Runtime:
         Name: APPSYNC_JS
         RuntimeVersion: 1.0.0

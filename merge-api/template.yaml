@@ -56,3 +56,9 @@ Resources:
       MergedApiExecutionRoleArn: !GetAtt AppSyncMergeAPIExecutionRole.Arn
 
 
+
+Outputs:
+  MergeAPIId:
+    Value: !GetAtt AppSyncMergeAPI.ApiId
+  MergeAPIRoleArn:
+    Value: !Ref AppSyncMergeAPIExecutionRole

@@ -21,7 +21,7 @@ region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = """
 APIName=\"User API\" \
-MergedApiIdentifier="l7jlsrhrovgzdmybpnenmixfna" \
-MergeApiExecutionRoleName="appsync-merge-api-example-AppSyncMergeAPIExecutionR-qScPFImnhmEA"
+MergedApiIdentifier="cdg32jy26jfyhlntcsczxo5zka" \
+MergeApiExecutionRoleName="appsync-merge-api-example-AppSyncMergeAPIExecutionR-G9UBVX2EZXLI"
 """
 image_repositories = []
