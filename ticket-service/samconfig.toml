@@ -21,7 +21,7 @@ region = "eu-west-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = """
 APIName="Ticket API" \
-MergedApiIdentifier="cdg32jy26jfyhlntcsczxo5zka" \
-MergeApiExecutionRoleName="appsync-merge-api-example-AppSyncMergeAPIExecutionR-G9UBVX2EZXLI"
+MergedApiIdentifier="<merge API indentifier>" \
+MergeApiExecutionRoleName="<merge API execution role ARN>"
 """
 image_repositories = []
